@@ -1,5 +1,9 @@
 10/01/2021 Oleg Moskalenko <mom040267@gmail.com> Mihály Mészáros <misi@majd.eu>
 Version 4.5.3 'dan Eider':
+	- merge PR #755(moznuy) and #825(by argggh)
+		* fix sqlite3_shutdown and sqlite3_config race
+	- merge PR #826 (by giavac)
+		* prom server better
 	- merge PR #684 (by brevilo)
 		* Define OPENSSL_VERSION_1_1_1 on systems where it doesn't (yet) exist
 		* Regression in 4.5.2 that cause issues in openssl version < 1.1.1.
@@ -21,6 +25,20 @@ Version 4.5.3 'dan Eider':
 		* Readme.turnserver: how to run server as a daemon
 	- merge PR #739 (by hills)
 		* SSL reload has hidden bugs which cause crashes
+	- Fix regression in PR #739
+	- Try to mitigate STUN amplification attatck
+		* Add new option --no-rfc5780
+		to force disable RFC8750
+		* Add new option --no-stun-backward-compatibility
+		Disable handling old STUN Binding requests and disable
+		MAPPED-ADDRESS attribute in binding response (use only the
+		XOR-MAPPED-ADDRESS)
+		* Add new option --response-origin-only-with-rfc5780
+		Add RESPONSE_ORIGIN attribute only if rfc5780 is enabled
+		* Don't send SOFTWARE attribute if --no-software-attribute
+		set on (BREAKING CHANGE)
+	- merge PR #767 (by ggalperi)
+	    * fix for log_binding (regression)
 
 10/01/2021 Oleg Moskalenko <mom040267@gmail.com> Mihály Mészáros <misi@majd.eu>
 Version 4.5.2 'dan Eider':

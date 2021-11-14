@@ -2,7 +2,7 @@
 # Dockerfile of coturn/coturn:alpine Docker image.
 #
 
-ARG alpine_ver=3.13
+ARG alpine_ver=3.14.2
 
 
 
@@ -39,7 +39,7 @@ RUN mkdir -p /build/ && cd /build/ \
 
 # Build libprom.so from sources.
 RUN mkdir -p /build/prom/build/ && cd /build/prom/build/ \
- && TEST=0 cmake -v -G "Unix Makefiles" \
+ && TEST=0 cmake -G "Unix Makefiles" \
                  -DCMAKE_INSTALL_PREFIX=/usr \
                  -DCMAKE_SKIP_BUILD_RPATH=TRUE \
                  -DCMAKE_C_FLAGS="-DPROM_LOG_ENABLE -g -O3" \
@@ -51,7 +51,7 @@ RUN mkdir -p /build/promhttp/build/ && cd /build/promhttp/build/ \
  # Fix compiler warning: -Werror=incompatible-pointer-types
  && sed -i 's/\&promhttp_handler/(MHD_AccessHandlerCallback)\&promhttp_handler/' \
            /build/promhttp/src/promhttp.c \
- && TEST=0 cmake -v -G "Unix Makefiles" \
+ && TEST=0 cmake -G "Unix Makefiles" \
                  -DCMAKE_INSTALL_PREFIX=/usr \
                  -DCMAKE_SKIP_BUILD_RPATH=TRUE \
                  -DCMAKE_C_FLAGS="-g -O3" \
@@ -128,7 +128,9 @@ RUN if [ "${coturn_git_ref}" != 'HEAD' ]; then true \
  && true; fi
 
 # Build Coturn from sources.
-RUN ./configure --prefix=/usr \
+# TODO: Remove this symlink with next Coturn release detecting MySQL libs correctly.
+RUN ln -s /usr/lib/pkgconfig/libmariadb.pc /usr/lib/pkgconfig/mariadb.pc \
+ && ./configure --prefix=/usr \
                 --turndbdir=/var/lib/coturn \
                 --disable-rpath \
                 --sysconfdir=/etc/coturn \
@@ -150,6 +152,7 @@ RUN mkdir -p /out/ \
  && rm -f /out/etc/coturn/turnserver.conf.default
 
 # Install helper tools of Docker image.
+COPY docker/coturn/rootfs/ /out/
 COPY docker/coturn/alpine/rootfs/ /out/
 RUN chmod +x /out/usr/local/bin/docker-entrypoint.sh \
              /out/usr/local/bin/detect-external-ip.sh
@@ -185,6 +188,9 @@ RUN apk update \
         hiredis \
         mongo-c-driver \
         libmicrohttpd \
+ # Install `dig` tool for `detect-external-ip.sh`.
+ && apk add --no-cache \
+        bind-tools \
  # Cleanup unnecessary stuff.
  && rm -rf /var/cache/apk/*
 
